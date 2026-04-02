@@ -3,21 +3,25 @@ import json
 import platform
 import subprocess
 import requests
-from github import Github
+import sys
+import time
+import re
+from github import Github, Auth
 
 # --- AYARLAR ---
-# Config dosyası masaüstüne oluşturulduğu için oradan okuyoruz
 CONFIG_FILE = os.path.expanduser("~/Masaüstü/.hakan_config")
 MEMORY_FILE = os.path.expanduser("~/Masaüstü/memory.json")
 OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL_NAME = "llama3.2:1b"
 
 class HybridMemory:
     def __init__(self, token, repo_name):
-        self.gh = Github(token)
+        auth = Auth.Token(token)
+        self.gh = Github(auth=auth)
         try:
             self.repo = self.gh.get_repo(repo_name)
         except Exception as e:
-            print(f"❌ Repo bulunamadı: {repo_name}. Lütfen GitHub'da bu isimle bir repo oluşturun.")
+            print(f"❌ Repo erişim hatası: {e}")
             exit()
         self.local_data = self.load_local()
 
@@ -30,39 +34,15 @@ class HybridMemory:
     def sync(self):
         print("🔄 GitHub ile senkronize ediliyor...")
         try:
-            # GitHub'daki memory.json dosyasını kontrol et
+            content_str = json.dumps(self.local_data, indent=4)
             try:
                 contents = self.repo.get_contents("memory.json")
-                remote_data = json.loads(contents.decoded_content.decode())
-                
-                # Basit Merge (Birleştirme)
-                remote_data["learned_commands"].update(self.local_data["learned_commands"])
-                # Yeni geçmiş öğelerini ekle (tekrar etmeden)
-                for item in self.local_data["history"]:
-                    if item not in remote_data["history"]:
-                        remote_data["history"].append(item)
-                
-                self.local_data = remote_data
-                sha = contents.sha
+                self.repo.update_file("memory.json", "Brain Sync: Update", content_str, contents.sha)
             except:
-                # Eğer GitHub'da memory.json yoksa ilk kez oluştur
-                print("📝 GitHub'da memory.json oluşturuluyor...")
-                sha = None
-
-            # Yerel dosyayı güncelle
-            with open(MEMORY_FILE, "w", encoding="utf-8") as f:
-                json.dump(self.local_data, f, indent=4)
-            
-            # GitHub'a yükle
-            content_str = json.dumps(self.local_data, indent=4)
-            if sha:
-                self.repo.update_file("memory.json", "Brain Sync: Güncelleme", content_str, sha)
-            else:
-                self.repo.create_file("memory.json", "Brain Sync: İlk Kurulum", content_str)
-            
+                self.repo.create_file("memory.json", "Brain Sync: Initial", content_str)
             print("✅ Senkronizasyon Tamamlandı!")
         except Exception as e:
-            print(f"⚠️ Senkronizasyon Hatası (Offline Mod): {e}")
+            print(f"⚠️ Senkronizasyon Hatası: {e}")
 
 class HakanBrain:
     def __init__(self):
@@ -80,54 +60,74 @@ class HakanBrain:
             for line in f:
                 if "=" in line:
                     parts = line.strip().split("=", 1)
-                    if len(parts) == 2:
-                        config[parts[0]] = parts[1]
+                    if len(parts) == 2: config[parts[0]] = parts[1]
         return config.get("GITHUB_TOKEN"), config.get("GITHUB_USER")
 
+    def clean_command(self, raw_response):
+        """Yapay zekadan gelen cevabı sadece geçerli bir komuta dönüştürür"""
+        # İlk satırı al (açıklamaları at)
+        first_line = raw_response.strip().split('\n')[0]
+        # Backtickleri temizle
+        cmd = first_line.replace('`', '').replace('Command:', '').strip()
+        # Eğer hala metin kalmışsa (bazı modeller 'Burada bir komut var:' diyebilir)
+        # Sadece bilinen bash komutlarıyla başlayan kısmı yakalamaya çalış
+        return cmd
+
     def think(self, prompt):
-        print("🧠 Düşünülüyor...")
-        system_msg = f"Sen Hakan'ın Linux/Windows/Android asistanısın. İşletim sistemi: {self.system}. Kullanıcının isteğine uygun TEK BİR terminal komutu üret. Açıklama yapma, sadece komutu yaz."
+        print(f"🧠 {MODEL_NAME} ile düşünülüyor...")
+        system_msg = f"Sen bir Linux/Terminal asistanısın. Görevin: Kullanıcının isteğini sadece TEK BİR terminal komutu olarak yazmaktır. Kesinlikle açıklama yapma, cümle kurma. Sadece komut."
         
         try:
             payload = {
-                "model": "llama3",
-                "prompt": f"{system_msg}\nİstek: {prompt}\nKomut:",
-                "stream": False
+                "model": MODEL_NAME, 
+                "prompt": f"{system_msg}\nİstek: {prompt}\nKomut:", 
+                "stream": False,
+                "options": {"num_thread": 4, "temperature": 0.0} # 0.0 temperature ile tutarlı komut üretimi
             }
-            res = requests.post(OLLAMA_URL, json=payload, timeout=10)
-            return res.json()['response'].strip().replace('`', '')
-        except:
-            return "Hata: Ollama servisinden cevap alınamadı. (ollama serve açık mı?)"
+            res = requests.post(OLLAMA_URL, json=payload, timeout=30)
+            raw_response = res.json()['response']
+            return self.clean_command(raw_response)
+        except Exception as e:
+            return f"echo '❌ Ollama Hatası: {str(e)}'"
+
+    def execute_and_sync(self, req, cmd):
+        print(f"🤖 Önerilen Komut: {cmd}")
+        if "❌" in cmd:
+            print(cmd)
+            return
+
+        # Otomatik deneme/test modunda mıyız kontrol et (input stdin'den geliyorsa onay bekleme)
+        if not sys.stdin.isatty():
+            ans = 'e'
+            print("🤖 Test Modu: Otomatik onaylandı.")
+        else:
+            ans = input("✅ Onaylıyor musun? (e/h): ").lower()
+
+        if ans == 'e':
+            print("⚙️ Çalıştırılıyor...")
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                print(f"✅ BAŞARILI!\n--- ÇIKTI ---\n{result.stdout}")
+                self.memory.local_data["history"].append({"request": req, "command": cmd, "status": "success", "time": time.ctime()})
+            else:
+                print(f"❌ HATA!\n--- HATA ---\n{result.stderr}")
+                self.memory.local_data["history"].append({"request": req, "command": cmd, "status": "error", "time": time.ctime()})
+            
+            self.memory.sync()
+        else:
+            print("⚠️ İşlem iptal edildi.")
 
     def run(self):
-        print(f"\n🌟 HAKAN BRAIN v3 AKTİF! [Sistem: {self.system}]")
-        print("Çıkmak için 'exit' yazın.\n")
-        
+        print(f"\n🚀 HAKAN BRAIN v3.4 [HIZLI VE KARARLI MOD]")
         while True:
             try:
-                req = input("Hakan > ").strip()
-                if not req: continue
-                if req.lower() in ['exit', 'quit']: break
-                
+                req = input("\nHakan > ").strip()
+                if not req or req.lower() in ['exit', 'quit']: break
                 cmd = self.think(req)
-                print(f"🤖 Önerilen Komut: {cmd}")
-                
-                ans = input("✅ Onaylıyor musun? (e/h): ").lower()
-                if ans == 'e':
-                    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-                    if result.returncode == 0:
-                        print(f"--- ÇIKTI ---\n{result.stdout}")
-                    else:
-                        print(f"--- HATA ---\n{result.stderr}")
-                    
-                    self.memory.local_data["history"].append({"request": req, "command": cmd})
-                    self.memory.sync()
-                else:
-                    print("⚠️ İşlem iptal edildi.")
-                    
-            except KeyboardInterrupt:
-                break
-        print("\n👋 Beyin uyku moduna geçiyor...")
+                self.execute_and_sync(req, cmd)
+            except KeyboardInterrupt: break
+            except EOFError: break # Pipe ile biterse döngüden çık
+        print("👋 Görüşürüz!")
 
 if __name__ == "__main__":
     brain = HakanBrain()
