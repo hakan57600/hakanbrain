@@ -11,6 +11,11 @@
             "request": "T\u00fcrkiye'nin ba\u015fkenti neresidir ve tarih\u00e7esi hakk\u0131nda \u00e7ok k\u0131sa bilgi verir misin?",
             "response": "Merhaba Hakan Bey! \u015eu anda llama3.1:8b modelinde \u00e7al\u0131\u015f\u0131yorum. Donan\u0131m \u00f6zellikleri hakk\u0131nda bilgi vermemde yard\u0131mc\u0131 olursam sevinirim.\n\nT\u00fcrkiye'nin ba\u015fkenti Ankara'd\u0131r. Tarih\u00e7esi olarak, 1923 y\u0131l\u0131nda Mustafa Kemal Atat\u00fcrk taraf\u0131ndan kurulmu\u015ftur ve T\u00fcrkiye Cumhuriyeti'nin siyasi, ekonomik ve k\u00fclt\u00fcrel merkezidir.",
             "time": "Fri Apr  3 00:29:40 2026"
+        },
+        {
+            "request": "Yapay zeka modelleri aras\u0131ndaki 'bilgi aktar\u0131m\u0131' nedir?",
+            "response": "Merhaba Hakan Bey! Bilgi aktar\u0131m\u0131, yapay zeka modellerinin birbirinden \u00f6\u011frenme ve bilgi payla\u015f\u0131m\u0131n\u0131 ifade eder. Bu s\u00fcre\u00e7te, bir modelin deneyim ve bilgisi di\u011fer modele aktar\u0131larak geli\u015ftirilir. Bu sayede, yeni modeller daha h\u0131zl\u0131 ve etkili \u00f6\u011frenirler.",
+            "time": "Fri Apr  3 00:30:06 2026"
         }
     ]
 }
