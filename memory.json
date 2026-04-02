@@ -1,1 +1,14 @@
-{}
+{
+    "history": [
+        {
+            "request": "Sistem taramas\u0131 yap ve sonucunu rapor.txt olarak kaydet",
+            "command": "Hata: Ollama servisinden cevap al\u0131namad\u0131. (ollama serve a\u00e7\u0131k m\u0131?)"
+        },
+        {
+            "request": "Sistem durumunu kontrol et ve sonucu rapor.txt dosyas\u0131na yaz",
+            "command": "echo 'Hata: Ollama ula\u015f\u0131lamad\u0131. HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=15)'"
+        }
+    ],
+    "learned_commands": {},
+    "last_sync": null
+}
