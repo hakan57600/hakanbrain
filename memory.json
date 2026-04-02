@@ -5,10 +5,10 @@
             "command": "Hata: Ollama servisinden cevap al\u0131namad\u0131. (ollama serve a\u00e7\u0131k m\u0131?)"
         },
         {
-            "request": "mkdir -p ~/Masa\u00fcst\u00fc/tomi_final_test",
-            "command": "mkdir -p ~/Masa\u00fcst\u00fc/tomi_final_test",
-            "status": "success",
-            "time": "Thu Apr  2 23:09:28 2026"
+            "request": "merhaba",
+            "command": "Merhaba.",
+            "status": "error",
+            "time": "Thu Apr  2 23:45:12 2026"
         }
     ],
     "learned_commands": {},
