@@ -6,6 +6,11 @@
             "request": "Merhaba, \u015fu an hangi cihazda \u00e7al\u0131\u015f\u0131yorsun ve donan\u0131m \u00f6zelliklerin neler?",
             "response": "Merhaba Hakan Bey! \u015eu anda llama3.1:8b modelinde \u00e7al\u0131\u015f\u0131yorum. Donan\u0131m \u00f6zellikleri hakk\u0131nda bilgi vermemde yard\u0131mc\u0131 olursam sevinirim.\n\nBu modelde, 2020'li y\u0131llara ait bir donan\u0131ma sahip oldu\u011fumu g\u00f6r\u00fcyorum. Bilgisayar\u0131n i\u015flemcisi Intel Core i5 veya i7 serisi olabilir. Bellek miktar\u0131 8 GB'dir ve i\u015fletim sistemi muhtemelen Linux tabanl\u0131d\u0131r. Ekran kart\u0131 ise NVIDIA GeForce GTX 1650 veya benzeri bir model olabilir.\n\nLakin bu bilgiler, daha fazla bilgiye ihtiya\u00e7 duyuldu\u011funda veya daha do\u011fru sonu\u00e7lar elde etmek i\u00e7in gereklidir. L\u00fctfen daha fazla ayr\u0131nt\u0131 isteyebilirsiniz.",
             "time": "Fri Apr  3 00:29:05 2026"
+        },
+        {
+            "request": "T\u00fcrkiye'nin ba\u015fkenti neresidir ve tarih\u00e7esi hakk\u0131nda \u00e7ok k\u0131sa bilgi verir misin?",
+            "response": "Merhaba Hakan Bey! \u015eu anda llama3.1:8b modelinde \u00e7al\u0131\u015f\u0131yorum. Donan\u0131m \u00f6zellikleri hakk\u0131nda bilgi vermemde yard\u0131mc\u0131 olursam sevinirim.\n\nT\u00fcrkiye'nin ba\u015fkenti Ankara'd\u0131r. Tarih\u00e7esi olarak, 1923 y\u0131l\u0131nda Mustafa Kemal Atat\u00fcrk taraf\u0131ndan kurulmu\u015ftur ve T\u00fcrkiye Cumhuriyeti'nin siyasi, ekonomik ve k\u00fclt\u00fcrel merkezidir.",
+            "time": "Fri Apr  3 00:29:40 2026"
         }
     ]
 }
