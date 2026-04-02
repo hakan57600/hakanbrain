@@ -1,16 +1,11 @@
 {
-    "history": [
+    "history": [],
+    "successful_commands": [],
+    "gold_standard": [
         {
-            "request": "Sistem taramas\u0131 yap ve sonucunu rapor.txt olarak kaydet",
-            "command": "Hata: Ollama servisinden cevap al\u0131namad\u0131. (ollama serve a\u00e7\u0131k m\u0131?)"
-        },
-        {
-            "request": "merhaba",
-            "command": "Merhaba.",
-            "status": "error",
-            "time": "Thu Apr  2 23:45:12 2026"
+            "request": "Merhaba, \u015fu an hangi cihazda \u00e7al\u0131\u015f\u0131yorsun ve donan\u0131m \u00f6zelliklerin neler?",
+            "response": "Merhaba Hakan Bey! \u015eu anda llama3.1:8b modelinde \u00e7al\u0131\u015f\u0131yorum. Donan\u0131m \u00f6zellikleri hakk\u0131nda bilgi vermemde yard\u0131mc\u0131 olursam sevinirim.\n\nBu modelde, 2020'li y\u0131llara ait bir donan\u0131ma sahip oldu\u011fumu g\u00f6r\u00fcyorum. Bilgisayar\u0131n i\u015flemcisi Intel Core i5 veya i7 serisi olabilir. Bellek miktar\u0131 8 GB'dir ve i\u015fletim sistemi muhtemelen Linux tabanl\u0131d\u0131r. Ekran kart\u0131 ise NVIDIA GeForce GTX 1650 veya benzeri bir model olabilir.\n\nLakin bu bilgiler, daha fazla bilgiye ihtiya\u00e7 duyuldu\u011funda veya daha do\u011fru sonu\u00e7lar elde etmek i\u00e7in gereklidir. L\u00fctfen daha fazla ayr\u0131nt\u0131 isteyebilirsiniz.",
+            "time": "Fri Apr  3 00:29:05 2026"
         }
-    ],
-    "learned_commands": {},
-    "last_sync": null
+    ]
 }
