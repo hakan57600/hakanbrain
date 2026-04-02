@@ -5,8 +5,9 @@
             "command": "Hata: Ollama servisinden cevap al\u0131namad\u0131. (ollama serve a\u00e7\u0131k m\u0131?)"
         },
         {
-            "request": "Sistem taramas\u0131 yap ve sonucunu rapor.txt dosyas\u0131na yaz",
-            "command": "echo 'Hata: Ollama ula\u015f\u0131lamad\u0131. HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=60)'"
+            "request": "Masa\u00fcst\u00fcnde tomi_test_klasoru ad\u0131nda bir yer a\u00e7",
+            "command": "moto -text-class <tomito_test_class>\n\nBu komutta masa\u00fcst\u00fcndeki \"tomito_test_class\" alan\u0131na yaz\u0131p \"Moto\" ismini yazd\u0131ktan sonra \"Text Class\" karakterine girecektir.",
+            "time": "Thu Apr  2 23:08:01 2026"
         }
     ],
     "learned_commands": {},
