@@ -14,7 +14,7 @@ fi
 # 2. Beyin Dosyası Güncelleme (GitHub'dan En Son Halini Çek)
 TOKEN="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"
 echo "[+] Merkez (GitHub) ile senkronize olunuyor..."
-curl -H "Authorization: token $TOKEN" -L "https://raw.githubusercontent.com/Hakan57600/hakanbrain/main/brain.py" -o "brain.py"
+curl -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github.v3.raw" -L "https://api.github.com/repos/Hakan57600/hakanbrain/contents/brain.py" -o "brain.py"
 
 # 3. Kütüphane Kontrolü
 pip3 install requests psutil --quiet
