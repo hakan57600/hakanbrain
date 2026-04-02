@@ -1,61 +1,50 @@
-import os, sys, platform, subprocess, time
+import os, sys, platform, subprocess, requests
 
-def run(cmd): 
-    print(f'⚙️ Çalıştırılıyor: {cmd}')
-    return subprocess.run(cmd, shell=True)
+def run(cmd): subprocess.run(cmd, shell=True)
 
 def setup():
     sys_name = platform.system().lower()
-    print(f'\n🚀 HAKAN BRAIN - MASTER KURULUM SİHİRBAZI [{sys_name.upper()}]')
-    print('--------------------------------------------------')
-
-    # 1. Kütüphane Kurulumları
-    print('[+] Python kütüphaneleri yükleniyor...')
+    print(f'
+🌍 HAKAN WORLD KURULUYOR... [{sys_name.upper()}]')
+    
+    # Kütüphaneler
     run(f'{sys.executable} -m pip install PyGithub requests psutil --quiet')
     
-    # 2. İşletim Sistemine Özel Paketler
-    if 'linux' in sys_name:
-        print('[+] Linux paketleri güncelleniyor...')
-        run('sudo apt update && sudo apt install -y git curl python3-pip')
-    elif 'windows' in sys_name:
-        print('[+] Windows için hazırlık yapılıyor...')
-        # Windows'ta paket yönetimi için winget veya doğrudan devam
-    
-    # 3. Ollama Kurulum Kontrolü
-    if run('ollama --version').returncode != 0:
-        print('[!] Ollama bulunamadı! Lütfen ollama.com adresinden manuel kurun.')
-    else:
-        print('[+] Ollama hazır. Model indiriliyor (llama3.2:1b)...')
-        run('ollama pull llama3.2:1b')
-
-    # 4. Kişisel Ayarlar (Config)
+    # Config Bilgileri
     config_path = os.path.expanduser('~/.hakan_config')
     if not os.path.exists(config_path):
-        user = input('\nGitHub Kullanıcı Adın: ')
+        user = input('
+GitHub Kullanıcı Adın: ')
         token = input('GitHub Token (ghp_...): ')
         with open(config_path, 'w') as f:
-            f.write(f'GITHUB_USER={user}\nGITHUB_TOKEN={token}\n')
-        print('✅ Kimlik bilgileri kaydedildi.')
+            f.write(f'GITHUB_USER={user}
+GITHUB_TOKEN={token}
+')
 
-    # 5. Beyin Dosyasını İndir
-    print('[+] Ana Beyin (brain.py) GitHub\'dan çekiliyor...')
-    import requests
-    # Bilgileri tekrar oku
+    # brain.py İndir
     with open(config_path, 'r') as f:
-        lines = f.readlines()
-        user = lines[0].split('=')[1].strip()
+        user = f.readlines()[0].split('=')[1].strip()
     
     url = f'https://raw.githubusercontent.com/{user}/hakanbrain/main/brain.py'
-    try:
-        res = requests.get(url)
-        with open('brain.py', 'w', encoding='utf-8') as f:
-            f.write(res.text)
-        print('✅ brain.py başarıyla indirildi.')
-    except:
-        print('❌ brain.py indirilemedi! Lütfen interneti kontrol edin.')
+    res = requests.get(url)
+    brain_path = os.path.join(os.path.expanduser('~'), 'brain.py')
+    with open(brain_path, 'w', encoding='utf-8') as f: f.write(res.text)
 
-    print('\n🎉 TÜM SİSTEM HAZIR! Hoş geldin Hakan.')
-    print('--------------------------------------------------')
-    print('Başlatmak için: python3 brain.py')
+    # hakanworld KISAYOLU (Alias)
+    home = os.path.expanduser('~')
+    if 'linux' in sys_name or 'android' in sys_name:
+        rc_path = os.path.join(home, '.bashrc')
+        alias_cmd = f"
+alias hakanworld='python3 {brain_path}'
+"
+        with open(rc_path, 'a') as f: f.write(alias_cmd)
+        print('✅ hakanworld komutu sisteme eklendi! (Terminali kapatıp açın)')
+    elif 'windows' in sys_name:
+        bat_path = os.path.join(home, 'hakanworld.bat')
+        with open(bat_path, 'w') as f: f.write(f'@python {brain_path} %*')
+        print(f'✅ hakanworld.bat oluşturuldu: {bat_path}')
 
-if __name__ == "__main__": setup()
+    print('
+🎉 Kurulum Bitti! Artık sadece "hakanworld" yazman yeterli.')
+
+if __name__ == '__main__': setup()
