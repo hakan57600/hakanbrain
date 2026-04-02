@@ -16,6 +16,11 @@
             "request": "Yapay zeka modelleri aras\u0131ndaki 'bilgi aktar\u0131m\u0131' nedir?",
             "response": "Merhaba Hakan Bey! Bilgi aktar\u0131m\u0131, yapay zeka modellerinin birbirinden \u00f6\u011frenme ve bilgi payla\u015f\u0131m\u0131n\u0131 ifade eder. Bu s\u00fcre\u00e7te, bir modelin deneyim ve bilgisi di\u011fer modele aktar\u0131larak geli\u015ftirilir. Bu sayede, yeni modeller daha h\u0131zl\u0131 ve etkili \u00f6\u011frenirler.",
             "time": "Fri Apr  3 00:30:06 2026"
+        },
+        {
+            "request": "Masa\u00fcst\u00fcnde 'v8_test_basarili.txt' ad\u0131nda bir dosya olu\u015ftur ve i\u00e7ine 'Sistem Haz\u0131r' yaz.",
+            "response": "Merhaba Hakan Bey! \u015eu anda llama3.1:8b modelinde \u00e7al\u0131\u015f\u0131yorum.\n\nBash komutu ile masa\u00fcst\u00fc \u00fczerinde \"v8_test_basarili.txt\" adl\u0131 dosyay\u0131 olu\u015fturabilir ve i\u00e7ine \"Sistem Haz\u0131r\" yazd\u0131rabilirim. \u0130\u015fte bu komut:\n\n```bash\necho \"Sistem Haz\u0131r\" > v8_test_basarili.txt\n```\n\nBu komut, masa\u00fcst\u00fc \u00fczerinde belirtilen dosya ismiyle ayn\u0131 ad ve i\u00e7erikte bir dosyay\u0131 olu\u015fturacakt\u0131r.",
+            "time": "Fri Apr  3 00:30:53 2026"
         }
     ]
 }
