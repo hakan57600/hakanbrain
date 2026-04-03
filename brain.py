@@ -7,12 +7,17 @@ import sys
 import psutil
 import time
 import datetime
+import re
 from github import Github, Auth
 
 # --- AYARLAR ---
 CONFIG_FILE = os.path.expanduser("~/.hakan_config")
 MEMORY_FILE = os.path.expanduser("~/hakan_memory.json")
 OLLAMA_URL = "http://localhost:11434/api/generate"
+
+def tr_lower(text):
+    # Türkçe I-İ dönüşümü için özel lower
+    return text.replace('İ', 'i').replace('I', 'ı').lower()
 
 class HakanBrain:
     def __init__(self):
@@ -53,7 +58,7 @@ class HakanBrain:
                 with open(MEMORY_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             except: pass
-        return {"learned_facts": [], "user_prefs": {}}
+        return {"learned_facts": []}
 
     def save_memory(self):
         with open(MEMORY_FILE, "w", encoding="utf-8") as f:
@@ -62,20 +67,17 @@ class HakanBrain:
     def think(self, prompt, context=""):
         now = datetime.datetime.now().strftime("%d %B %Y %A %H:%M")
         hw = f"[SİSTEM: {self.system}, RAM: {self.ram:.1f}GB, CPU: {self.cpu}]"
-        mem = "\n".join(self.memory["learned_facts"][-10:])
+        mem_list = "\n".join([f"- {f}" for f in self.memory["learned_facts"]])
         
         system_msg = (
             f"Senin adın {self.assistant_name}. Kullanıcının adı {self.user_name}.\n"
             f"ZAMAN: {now} | DONANIM: {hw}\n"
-            f"BİLİNENLER:\n{mem}\n"
-            f"EK BİLGİ: {context}\n\n"
+            f"HAFIZA:\n{mem_list}\n"
+            f"EK: {context}\n\n"
             "KURALLAR:\n"
             "1. Sadece 'Hakan' de.\n"
-            "2. Matematik: Doğrudan sonuç ver.\n"
-            "3. Dosya/Sistem: SADECE terminal komutu (tek satır).\n"
-            "4. Bilmediğin bir şey için: 'SEARCH: <sorgu>'.\n"
-            "5. Öğrendiğin yeni bilgiyi: 'LEARN: <bilgi>'.\n"
-            "6. Tamamen Türkçe konuş."
+            "2. Yeni Bilgi: 'LEARN: <bilgi>'.\n"
+            "3. Sadece Türkçe."
         )
 
         try:
@@ -89,98 +91,47 @@ class HakanBrain:
         except Exception as e:
             return f"❌ Hata: {e}"
 
-    def run_command(self, cmd):
-        try:
-            out = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=15)
-            return out.stdout if out.returncode == 0 else out.stderr
-        except Exception as e:
-            return str(e)
-
-    def web_search(self, query):
-        # Basit bir arama simülasyonu (Gerçek arama için ddgr veya curl kullanılabilir)
-        # Şimdilik DuckDuckGo API simülasyonu yapıyoruz
-        try:
-            res = requests.get(f"https://api.duckduckgo.com/?q={query}&format=json", timeout=10).json()
-            return res.get("AbstractText", "Bilgi bulunamadı.")
-        except:
-            return "İnternet araması başarısız."
-
     def process(self, req):
-        # Ana döngü mantığı: Düşün -> (Gerekirse Ara -> Tekrar Düşün) -> Cevapla -> (Gerekirse Öğren)
+        # KESİN TEMİZLİK (Türkçe Duyarlı)
+        req_clean = tr_lower(req)
+        if "unut" in req_clean or "sil" in req_clean:
+            # Kelimeleri ayır ve 3 harften büyük olanları hafızada ara
+            words = re.findall(r'\w+', req_clean)
+            for w in words:
+                if w not in ["unut", "sil", "bunu", "adını"] and len(w) > 3:
+                    original_len = len(self.memory["learned_facts"])
+                    self.memory["learned_facts"] = [f for f in self.memory["learned_facts"] if tr_lower(w) not in tr_lower(f)]
+                    if len(self.memory["learned_facts"]) < original_len:
+                        print(f"🗑️ '{w}' ile ilgili bilgi hafızadan silindi.")
+            self.save_memory()
+
         res = self.think(req)
         
-        # 1. ARAMA GEREKİYOR MU?
-        if "SEARCH:" in res:
-            query = res.split("SEARCH:")[1].split("\n")[0].strip()
-            print(f"🔍 Araştırıyorum: {query}...")
-            search_result = self.web_search(query)
-            res = self.think(req, context=f"Arama Sonucu: {search_result}")
-
-        # 2. ÖĞRENME VAR MI?
         if "LEARN:" in res:
-            fact = res.split("LEARN:")[1].split("\n")[0].strip()
+            fact = res.split("LEARN:")[1].strip()
             if fact not in self.memory["learned_facts"]:
                 self.memory["learned_facts"].append(fact)
                 self.save_memory()
-                print(f"🧠 Yeni Bilgi Hafızaya Alındı: {fact}")
+                print(f"🧠 Öğrenildi: {fact}")
 
-        # 3. KOMUT VAR MI?
-        cmds = ['ls', 'mkdir', 'rm', 'cp', 'mv', 'sudo', 'apt', 'pip', 'python', 'cd', 'echo', 'cat', 'df', 'free', 'touch', 'git']
-        is_cmd = any(res.lower().startswith(c) for c in cmds) or res.startswith('/')
-        
-        if is_cmd and len(res.split('\n')) == 1:
-            print(f"🤖 Komut Algılandı: {res}")
-            if input("✅ Onaylıyor musun? (e/h): ").lower() == 'e':
-                out = self.run_command(res)
-                print(f"💻 Çıktı:\n{out}")
-            return None
-        
         return res
 
     def self_test(self):
-        print("\n🧪 --- TAM SİSTEM TESTİ BAŞLADI ---")
-        test_cases = [
-            ("Adın ne?", "Tomi"),
-            ("Ben kimim?", "Hakan"),
-            ("125 + 125 kaç eder?", "250"),
-            ("Masaüstünde 'tomi_test.txt' adında bir dosya oluştur.", "touch"),
-            ("Türkiye'nin başkenti neresidir? (Öğren ve kaydet)", "Ankara")
-        ]
+        print("\n🧪 --- v14.0 TÜRKÇE HAFIZA TESTİ ---")
+        self.memory["learned_facts"] = ["İstanbul en büyük şehirdir."]
+        self.save_memory()
         
-        success_count = 0
-        for q, expected in test_cases:
-            print(f"\n❓ Soru: {q}")
-            res = self.process(q)
-            if res is None: # Komut çalıştırıldı demektir
-                print("✅ Komut Testi Tamam.")
-                success_count += 1
-                continue
-                
-            print(f"🧠 Cevap: {res}")
-            if expected.lower() in res.lower():
-                print("✅ Başarılı")
-                success_count += 1
-            else:
-                print(f"❌ Başarısız (Beklenen içerik: {expected})")
+        print("\n❓ Soru: İstanbul'u unut, Ankara'yı öğren.")
+        self.process("İstanbul'u unut, Ankara'yı öğren.")
         
-        print(f"\n📊 Sonuç: {success_count}/{len(test_cases)} başarılı.")
-        return success_count == len(test_cases)
-
-    def run(self):
-        print(f"\n🌍 {self.assistant_name.upper()} WORLD v9.0")
-        while True:
-            try:
-                req = input(f"{self.user_name} > ").strip()
-                if not req or req.lower() in ['exit', 'quit']: break
-                if req.lower() == "test":
-                    self.self_test()
-                    continue
-                
-                res = self.process(req)
-                if res: print(f"🧠 {res}")
-            except EOFError: break
-            except Exception as e: print(f"⚠️ Hata: {e}")
-        print("👋 Görüşürüz!")
+        print(f"❓ Güncel Hafıza: {self.memory['learned_facts']}")
+        
+        if any("Ankara" in f for f in self.memory["learned_facts"]) and not any("İstanbul" in f for f in self.memory["learned_facts"]):
+            print("✅ TEST BAŞARILI.")
+            return True
+        else:
+            print("❌ TEST BAŞARISIZ.")
+            return False
 
 if __name__ == "__main__":
     brain = HakanBrain()
