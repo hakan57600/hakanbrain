@@ -6,6 +6,7 @@ import requests
 import sys
 import psutil
 import time
+import datetime
 from github import Github, Auth
 
 # --- AYARLAR ---
@@ -21,7 +22,6 @@ class HakanBrain:
         self.ram = psutil.virtual_memory().total / (1024**3)
         # Daha detaylı CPU bilgisi alalım
         try:
-            # Alternatif ve daha sağlam yöntem
             self.cpu = subprocess.check_output("cat /proc/cpuinfo | grep 'model name' | head -n 1 | cut -d ':' -f 2", shell=True).decode().strip()
             if not self.cpu:
                 self.cpu = subprocess.check_output("lscpu | grep 'Model name' | cut -d ':' -f 2", shell=True).decode().strip()
@@ -54,21 +54,21 @@ class HakanBrain:
         return config.get("GITHUB_TOKEN"), config.get("GITHUB_USER")
 
     def think(self, prompt):
-        # DONANIM KARTI (AI buna bakmak zorunda)
+        now = datetime.datetime.now().strftime("%d %B %Y %A %H:%M")
         hw_card = f"[SİSTEM VERİSİ: İşletim Sistemi={self.system}, RAM={self.ram:.1f} GB, İşlemci={self.cpu}]"
         desktop_path = "/home/hakan/Masaüstü"
         
         system_msg = (
             f"Sen Hakan'ın kişisel asistanısın. \n"
+            f"GÜNCEL TARİH/SAAT: {now}\n"
             f"GERÇEK DONANIM BİLGİLERİ: {hw_card}\n"
             f"MASAÜSTÜ YOLU: {desktop_path}\n\n"
             "KESİN KURALLAR:\n"
-            "1. ASLA 'Hakan Bey' veya benzeri hitaplar kullanma. Sadece 'Hakan' diyebilirsin veya doğrudan konuya gir.\n"
-            "2. Donanım sorulursa SADECE yukarıdaki GERÇEK DONANIM BİLGİLERİ'ni söyle. Tahmin etme, uydurma.\n"
-            "3. Eğer kullanıcı bir dosya/klasör/sistem işlemi (komut) istiyorsa, cevabın SADECE terminal komutu olmalı. Başka hiçbir şey yazma.\n"
-            "4. Masaüstü ile ilgili bir dosya işlemi istenirse yolu mutlaka '/home/hakan/Masaüstü/' ile başlat.\n"
-            "5. Eğer sadece soru soruyorsa akıcı ve kibar Türkçe ile cevap ver.\n"
-            "6. Link verme."
+            "1. ASLA 'Hakan Bey' deme. Sadece 'Hakan' diyebilirsin.\n"
+            "2. Tarih/Saat sorulursa yukarıdaki GÜNCEL TARİH/SAAT bilgisini kullan.\n"
+            "3. Eğer kullanıcı bir komut (dosya/sistem işlemi) istiyorsa, cevabın SADECE terminal komutu olmalı.\n"
+            "4. Masaüstü işlemlerinde yolu mutlaka '/home/hakan/Masaüstü/' ile başlat.\n"
+            "5. Link verme. Sadece Türkçe cevap ver."
         )
 
         try:
@@ -76,14 +76,14 @@ class HakanBrain:
                 "model": self.model_name, 
                 "prompt": f"{system_msg}\nHakan: {prompt}\nAsistan:", 
                 "stream": False,
-                "options": {"temperature": 0.0} # Kesinlik için 0.0
+                "options": {"temperature": 0.0}
             }, timeout=90)
             return res.json()['response'].strip().replace('`', '')
-        except:
-            return "❌ Hata: Ollama ulaşılamadı."
+        except Exception as e:
+            return f"❌ Hata: Ollama ulaşılamadı. ({e})"
 
     def run(self):
-        print(f"\n🌍 HAKAN WORLD v8.2")
+        print(f"\n🌍 HAKAN WORLD v8.4 (TAM TEST EDİLMİŞ SÜRÜM)")
         print(f"Donanım: {self.system} | {self.ram:.1f} GB RAM | {self.cpu}")
         print(f"Aktif Zeka: {self.model_name}\n")
         
@@ -94,15 +94,12 @@ class HakanBrain:
                 
                 res = self.think(req)
                 
-                # Komut Kontrolü (Daha katı)
-                is_likely_cmd = any(req.lower().startswith(x) or x in req.lower() for x in ['aç', 'oluştur', 'sil', 'listele', 'kur', 'yükle'])
                 cmds = ['ls', 'mkdir', 'rm', 'cp', 'mv', 'sudo', 'apt', 'pip', 'python', 'cd', 'echo', 'cat', 'df', 'free', 'touch']
-                starts_with_cmd = any(res.lower().startswith(c) for c in cmds) or res.startswith('/')
+                is_likely_cmd = any(res.lower().startswith(c) for c in cmds) or res.startswith('/')
                 
-                if starts_with_cmd or (is_likely_cmd and len(res.split()) < 10):
+                if is_likely_cmd and len(res.split('\n')) == 1:
                     print(f"🤖 Önerilen Komut: {res}")
-                    # Otomatik test modu (isatty kontrolü)
-                    ans = 'e' if not sys.stdin.isatty() else input("✅ Onaylıyor musun? (e/h): ").lower()
+                    ans = input("✅ Onaylıyor musun? (e/h): ").lower()
                     if ans == 'e':
                         print("⚙️ Çalıştırılıyor...")
                         out = subprocess.run(res, shell=True, capture_output=True, text=True)
@@ -112,7 +109,11 @@ class HakanBrain:
                             print(f"❌ Hata: {out.stderr}")
                 else:
                     print(f"🧠 {res}")
-            except: break
+            except EOFError:
+                break
+            except Exception as e:
+                print(f"⚠️ Kritik Hata: {e}")
+                break
         print("👋 Görüşürüz!")
 
 if __name__ == "__main__":
