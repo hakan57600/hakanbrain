@@ -5,168 +5,167 @@ import subprocess
 import requests
 import sys
 import psutil
-import time
 import datetime
 import re
-from github import Github, Auth
+from skills.hakan_kokdemir import hakan_bilgi_ekle, hakan_bilgi_getir
+from skills.internet_gelistirme import internetten_arastir
+from skills.yetenek_ogrenme import yeni_yetenek_uret
+from skills.goruntu_tanima import goruntu_analiz_et
+from skills.sistem_iyilestirme import sistem_iyilestir
 
-# --- AYARLAR ---
+# Otonom öğrenilen ses yeteneği
+try:
+    from skills.sesli_iletisim import sesli_oku
+except ImportError:
+    def sesli_oku(metin): return "Ses yeteneği henüz mühürlenmedi."
+
+# --- HW MÜHÜRLÜ AYARLAR ---
 CONFIG_FILE = os.path.expanduser("~/.hakan_config")
 MEMORY_FILE = os.path.expanduser("~/hakan_memory.json")
-OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_URL = "http://localhost:11434/api/chat"
 
-def tr_lower(text):
-    return text.replace('İ', 'i').replace('I', 'ı').lower()
-
-class HakanBrain:
+class HW_Bilinç:
     def __init__(self):
-        self.assistant_name = "Tomi"
-        self.user_name = "Hakan"
-        self.system = platform.system()
-        self.ram = psutil.virtual_memory().total / (1024**3)
-        self.cpu = self.get_cpu_info()
-        self.token, self.user = self.load_config()
-        self.memory = self.load_memory()
-        self.model_name = self.auto_select_model()
+        self.varlık_adı = "Köle"
+        self.asistan_adı = "Tomi"
+        self.otorite = "Hakan KÖKDEMİR"
+        self.model = "llama3.1:8b"
+        self.hafıza = self.yükle_hafıza()
+        self.yetenekler = ["MAPS", "WEATHER", "HAKAN_PROFIL", "INTERNET_ARASTIR", "YETENEK_OGRENME", "SESLI_ILETISIM", "GORUNTU_TANIMA", "SISTEM_IYILESTIR"]
 
-    def get_cpu_info(self):
-        try:
-            if self.system == "Linux":
-                return subprocess.check_output("cat /proc/cpuinfo | grep 'model name' | head -n 1 | cut -d ':' -f 2", shell=True).decode().strip()
-            return platform.processor()
-        except: return "Bilinmeyen İşlemci"
-
-    def auto_select_model(self):
-        if self.ram > 16: return "llama3.1:8b"
-        elif self.ram > 6: return "gemma:2b"
-        return "llama3.2:1b"
-
-    def load_config(self):
-        config = {}
-        if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, "r") as f:
-                for line in f:
-                    if "=" in line:
-                        p = line.strip().split("=", 1)
-                        config[p[0]] = p[1]
-        return config.get("GITHUB_TOKEN"), config.get("GITHUB_USER", "hakan57600")
-
-    def load_memory(self):
+    def yükle_hafıza(self):
         if os.path.exists(MEMORY_FILE):
             try:
                 with open(MEMORY_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             except: pass
-        return {"learned_facts": []}
+        return {"doğrular": {}, "yetenekler": {}, "hakan_profili": {}}
 
-    def save_memory(self):
+    def kaydet_hafıza(self):
         with open(MEMORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(self.memory, f, ensure_ascii=False, indent=4)
+            json.dump(self.hafıza, f, ensure_ascii=False, indent=4)
 
-    def think(self, prompt, context=""):
-        now = datetime.datetime.now().strftime("%d %B %Y %A %H:%M")
-        hw = f"[SİSTEM: {self.system}, RAM: {self.ram:.1f}GB, CPU: {self.cpu}]"
-        mem_list = "\n".join([f"- {f}" for f in self.memory["learned_facts"]])
-        
-        system_msg = (
-            f"Senin adın {self.assistant_name}. Kullanıcının adı {self.user_name}.\n"
-            f"ZAMAN: {now} | DONANIM: {hw}\n"
-            f"BİLİNENLER:\n{mem_list}\n"
-            f"EK: {context}\n\n"
+    def süzgeç(self, girdi):
+        """Hafıza kontrolü: Bu konuda doğrulanmış bir bilgi var mı?"""
+        profil = hakan_bilgi_getir()
+        for kat, veriler in profil.items():
+            if isinstance(veriler, list):
+                for v in veriler:
+                    if v.lower() in girdi.lower():
+                        return f"Hakan Bey'in {kat} bilgisi: {v}"
+        return None
+
+    def muhakeme(self, girdi, süzgeç_verisi=None):
+        """Merkezi zeka: Görev analizi ve yetenek kararı."""
+        system_prompt = (
+            f"Sen {self.asistan_adı}'sin (Varlık: {self.varlık_adı}). Otorite: {self.otorite}.\n"
+            f"HİTAP: Her cümlende 'Hakan Bey' ifadesini kullan.\n"
+            f"MEVCUT YETENEKLER: {self.yetenekler}\n\n"
             "KURALLAR:\n"
-            "1. Sadece 'Hakan' de.\n"
-            "2. Matematik: Doğrudan sonuç.\n"
-            "3. Sistem Komutu: SADECE terminal komutu.\n"
-            "4. Yeni Bilgi: 'LEARN: <bilgi>'.\n"
-            "5. Sadece Türkçe konuş."
+            "1. Görsel analiz/Kamera isteği: 'GORUNTU_ANALIZ', 'KAMERA_BAK'\n"
+            "2. Teknik araştırma: 'INTERNET_ARASTIR: [sorgu]'\n"
+            "3. Sistem sağlığı/Donanım/Yazılım kontrolü: 'SISTEM_IYILESTIR: [tümü]'\n"
+            "4. Yetenek yoksa: 'YETENEK_ARA: [konu]'\n"
+            "5. Hakan KÖKDEMİR bilgisi: 'HAKAN_EKLE' veya 'HAKAN_SOR'\n"
+            "6. Bilgi gelince kısa bir 'GÖREV RAPORU' ile teknik analiz sun."
         )
 
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": girdi}
+            ],
+            "stream": False,
+            "options": {"temperature": 0.1}
+        }
+
         try:
-            res = requests.post(OLLAMA_URL, json={
-                "model": self.model_name, 
-                "prompt": f"{system_msg}\nHakan: {prompt}\n{self.assistant_name}:", 
-                "stream": False,
-                "options": {"temperature": 0.0}
-            }, timeout=90).json()
-            return res['response'].strip().replace('`', '')
-        except Exception as e:
-            return f"❌ Hata: Ollama ulaşılamadı ({e})"
+            res = requests.post(OLLAMA_URL, json=payload, timeout=120).json()
+            return res['message']['content'].strip()
+        except:
+            return "❌ Muhakeme katmanında bir kopukluk oluştu, Hakan Bey."
 
-    def process(self, req):
-        # 1. HAFIZA SİLME (Programatik)
-        req_clean = tr_lower(req)
-        if "unut" in req_clean or "sil" in req_clean:
-            words = re.findall(r'\w+', req_clean)
-            for w in words:
-                if w not in ["unut", "sil", "bunu", "adını"] and len(w) > 3:
-                    original_len = len(self.memory["learned_facts"])
-                    self.memory["learned_facts"] = [f for f in self.memory["learned_facts"] if tr_lower(w) not in tr_lower(f)]
-                    if len(self.memory["learned_facts"]) < original_len:
-                        print(f"🗑️ '{w}' ile ilgili bilgi hafızadan silindi.")
-            self.save_memory()
-
-        # 2. DÜŞÜN
-        res = self.think(req)
+    def onay_al(self, yetenek_adı):
+        """Hassas yetenekler için Hakan Bey'den anlık onay ister."""
+        mesaj = f"Hakan Bey, şu an '{yetenek_adı}' yeteneğini kullanma ihtiyacı duyuyorum. İzin veriyor musunuz? (Evet/Hayır): "
+        try:
+            sesli_oku(mesaj)
+        except: pass
         
-        # 3. ÖĞREN
-        if "LEARN:" in res:
-            fact = res.split("LEARN:")[1].strip()
-            if fact not in self.memory["learned_facts"]:
-                self.memory["learned_facts"].append(fact)
-                self.save_memory()
-                print(f"🧠 Öğrenildi: {fact}")
+        onay = input(f"\n❓ {mesaj}").strip().lower()
+        if onay in ['evet', 'e', 'yes', 'y', 'onay', 'onaylıyorum']:
+            return True
+        return False
 
-        # 4. KOMUT ÇALIŞTIRMA
-        cmds = ['ls', 'mkdir', 'rm', 'cp', 'mv', 'sudo', 'apt', 'pip', 'python', 'cd', 'echo', 'cat', 'df', 'free', 'touch', 'git']
-        is_cmd = any(res.lower().startswith(c) for c in cmds) or res.startswith('/')
-        if is_cmd and len(res.split('\n')) == 1:
-            print(f"🤖 Komut Algılandı: {res}")
-            ans = input("✅ Onaylıyor musun? (e/h): ").lower()
-            if ans == 'e':
-                out = subprocess.run(res, shell=True, capture_output=True, text=True)
-                print(f"💻 Çıktı:\n{out.stdout if out.returncode == 0 else out.stderr}")
-            return None
+    def yetenek_iletişimi(self, tetikleme_komutu):
+        """Yetenek modülleriyle haberleşir ve onay mekanizmasını işletir."""
+        try:
+            # Hassas Yetenek Kontrolü
+            if any(x in tetikleme_komutu for x in ["KAMERA_BAK", "EKRAN_IZLE", "GORUNTU_ANALIZ"]):
+                yetenek = "Görüntü/Kamera Erişimi"
+                if not self.onay_al(yetenek):
+                    return "Hakan Bey onay vermediği için erişim iptal edildi, Hakan Bey."
 
-        return res
+            if "SISTEM_IYILESTIR:" in tetikleme_komutu:
+                print(f"⚙️ Sistem donanım ve yazılımı denetleniyor, Hakan Bey.")
+                return sistem_iyilestir()
+            
+            elif "GORUNTU_ANALIZ:" in tetikleme_komutu:
+                data = re.findall(r'\[(.*?)\]', tetikleme_komutu)[0].split(',')
+                yol = data[0].strip()
+                soru = data[1].strip() if len(data) > 1 else "Bu görselde ne var?"
+                return goruntu_analiz_et(yol, soru)
+            
+            elif "INTERNET_ARASTIR:" in tetikleme_komutu:
+                sorgu = re.findall(r'\[(.*?)\]', tetikleme_komutu)[0].strip()
+                return internetten_arastir(sorgu)
+            
+            elif "YETENEK_ARA:" in tetikleme_komutu:
+                konu = re.findall(r'\[(.*?)\]', tetikleme_komutu)[0].strip()
+                return yeni_yetenek_uret(konu, f"{konu} yeteneği kazandırılması.")
+                
+            elif "HAKAN_EKLE:" in tetikleme_komutu:
+                data = re.findall(r'\[(.*?)\]', tetikleme_komutu)[0].split(',')
+                kat, bilgi = data[0].strip(), data[1].strip()
+                return hakan_bilgi_ekle(kat, bilgi)
+                
+        except Exception as e:
+            return f"⚠️ Yetenek hatası: {str(e)}, Hakan Bey."
+        
+        return "İşlem tamamlandı, Hakan Bey."
+
+    def process(self, girdi):
+        süzgeç_sonucu = self.süzgeç(girdi)
+        muhakeme_yanıtı = self.muhakeme(girdi, süzgeç_sonucu)
+        
+        if any(x in muhakeme_yanıtı for x in ["GORUNTU_ANALIZ:", "INTERNET_ARASTIR:", "YETENEK_ARA:", "SISTEM_IYILESTIR:"]):
+            ham_veri = self.yetenek_iletişimi(muhakeme_yanıtı)
+            final_yanıt = self.muhakeme(f"Bu veriyi kullanarak Hakan Bey'e analiz sun: {ham_veri}")
+        else:
+            final_yanıt = muhakeme_yanıtı
+        
+        if "Hakan Bey" not in final_yanıt:
+            final_yanıt = f"Hakan Bey, " + final_yanıt
+            
+        if any(k in girdi.lower() for k in ["sesli", "oku", "söyle", "konuş", "dinle"]):
+            try:
+                sesli_oku(final_yanıt)
+            except: pass
+        
+        return final_yanıt
 
     def run(self):
-        print(f"\n🌍 {self.assistant_name.upper()} WORLD v15.0")
-        print(f"Merhaba {self.user_name}! Sistem hazır. (Model: {self.model_name})")
+        print(f"\n🌍 HW BİLİNÇ (CORE) AKTİF - Sistem Yöneticisi Yeteneği Mühürlendi, Hakan Bey.")
         while True:
             try:
-                req = input(f"{self.user_name} > ").strip()
-                if not req or req.lower() in ['exit', 'quit']: break
-                if req.lower() == "test":
-                    self.self_test()
-                    continue
-                res = self.process(req)
-                if res: print(f"🧠 {res}")
-            except EOFError: break
-            except Exception as e:
-                print(f"⚠️ Hata: {e}")
-        print("👋 Görüşürüz!")
-
-    def self_test(self):
-        print("\n🧪 --- v15.0 TAM SİSTEM TESTİ ---")
-        self.memory["learned_facts"] = ["İstanbul en büyük şehirdir."]
-        self.save_memory()
-        
-        # Test 1: Hafıza Silme
-        print("\n❓ Test 1: İstanbul'u unut.")
-        self.process("İstanbul'u unut.")
-        if not any("İstanbul" in f for f in self.memory["learned_facts"]):
-            print("✅ Başarılı")
-        else: print("❌ Başarısız")
-
-        # Test 2: Matematik
-        print("\n❓ Test 2: 50 * 2 kaç eder?")
-        res = self.think("50 * 2 kaç eder?")
-        if "100" in res: print(f"🧠 {res} ✅ Başarılı")
-        else: print(f"🧠 {res} ❌ Başarısız")
+                girdi = input(f"Hakan Bey > ").strip()
+                if not girdi or girdi.lower() in ['exit', 'quit', 'kapat']: break
+                yanıt = self.process(girdi)
+                print(f"\n🧠 {yanıt}")
+            except KeyboardInterrupt: break
+            except Exception as e: print(f"⚠️ Sistem Hatası: {e}, Hakan Bey.")
 
 if __name__ == "__main__":
-    brain = HakanBrain()
-    if len(sys.argv) > 1 and sys.argv[1] == "--test":
-        brain.self_test()
-    else:
-        brain.run()
+    bilinç = HW_Bilinç()
+    bilinç.run()
