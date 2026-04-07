@@ -1,0 +1,16 @@
+{
+    "learned_facts": [],
+    "last_error": null,
+    "hakan_profili": {
+        "kimlik": ["Adı: Hakan, Soyadı: KÖKDEMİR"],
+        "yemek": ["En sevdiği: Kırmızı et"],
+        "muzik": ["Rock müzik"],
+        "hobi": ["Oyun oynamak, yüzme, kamp, rock müzik, bass gitar çalmak"],
+        "arac": ["Mondial Nevada marka chopper motor sahibi"],
+        "meslek": ["Kamu kurumunda bilgisayar teknikeri"],
+        "ozgecmis": ["12 yıl profesyonel aşçılık yapmış"],
+        "aile": ["Evli, eşi Macide"],
+        "dogum": ["22/05/1983 Saat 16:00, İstanbul/Göztepe"],
+        "konum": ["Sinop/Gerze (Şu an yaşıyor)"]
+    }
+}
