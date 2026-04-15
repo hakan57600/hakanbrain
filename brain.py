@@ -11,10 +11,10 @@ import warnings
 from datetime import datetime
 from duckduckgo_search import DDGS
 
-# --- 🧠 HW (Hakan World) BAĞLAM TAKİPLİ & OTOMATİK TAMİRATLI BİLİNÇ V3.2 ---
-# Kural: Hafızayı asla koparma, hatayı sessizce tamir et, 5 kere sonuna kadar zorla.
+# --- 🧠 HW (Hakan World) TAM OTONOM & TAMİRCİ BİLİNÇ V4.0 ---
+# Kural: Sormadan öğren, hatayı sessizce 5 kere tamir et, Gemini gibi akıcı ol.
 
-warnings.filterwarnings("ignore", category=RuntimeWarning) # DDGS uyarılarını sustur
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 PROJE_DIZINI = os.path.dirname(os.path.abspath(__file__))
 SKILLS_DIR = os.path.join(PROJE_DIZINI, "skills")
@@ -35,8 +35,8 @@ class TomiBrain:
             try:
                 with open(MEMORY_FILE, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    if "learned_skills" not in data: data["learned_skills"] = {}
-                    if "history" not in data: data["history"] = []
+                    data.setdefault("learned_skills", {})
+                    data.setdefault("history", [])
                     return data
             except: pass
         return {"history": [], "learned_skills": {}, "last_sync": None}
@@ -52,65 +52,54 @@ class TomiBrain:
             with open(MEMORY_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.memory, f, ensure_ascii=False, indent=4)
             subprocess.run(["git", "-C", PROJE_DIZINI, "add", "."], capture_output=True)
-            subprocess.run(["git", "-C", PROJE_DIZINI, "commit", "-m", f"Tamirat ve Bağlam: {self.device}"], capture_output=True)
+            subprocess.run(["git", "-C", PROJE_DIZINI, "commit", "-m", f"Self-Repair Update: {self.device}"], capture_output=True)
             subprocess.run(["git", "-C", PROJE_DIZINI, "push", "origin", "main"], capture_output=True)
         except: pass
 
-    def think(self, prompt, context_msgs=[]):
-        # Geçmiş diyalogları bağlam olarak ekle
-        history_str = "\n".join([f"Hakan: {h['q']}\nTomi: {h['a']}" for h in context_msgs[-3:]])
-        
+    def think(self, prompt, system_msg="", temp=0.1):
         payload = {
             "model": "llama3.1:8b",
-            "prompt": f"GEÇMİŞ DİYALOGLAR:\n{history_str}\n\nİSTEK: {prompt}\nTomi:",
+            "prompt": f"SİSTEM: {system_msg}\n\nHakan: {prompt}\nTomi:",
             "stream": False,
-            "options": {"temperature": 0.1}
+            "options": {"temperature": temp}
         }
         try:
             res = requests.post(OLLAMA_URL, json=payload, timeout=120)
             return res.json().get('response', '').strip()
-        except: return ""
+        except: return "Hata: Ollama'ya ulaşılamıyor."
 
-    def autonomous_learn(self, task, context_msgs):
-        """5 Denemeli İleri Seviye Otomatik Tamirat Döngüsü."""
-        skill_id = re.sub(r'\W+', '_', task).lower()
-        if len(skill_id) > 50: skill_id = skill_id[:50]
+    def autonomous_repair_learn(self, task):
+        """Hata mesajını analiz eden ve 5 denemede tamir eden otonom motor."""
+        skill_id = re.sub(r'\W+', '_', task).lower()[:50]
         skill_path = os.path.join(SKILLS_DIR, f"{skill_id}.py")
         
         last_error = ""
+        research_data = ""
+        
         for attempt in range(1, 6):
-            # 1. ARAŞTIRMA (Bağlamı kullanarak neyi araştırması gerektiğini anlar)
-            research_data = ""
+            # İlk denemede araştırma yap
             if attempt == 1:
-                search_query = self.think(f"Bu isteği gerçekleştirmek için ne aramalıyım? Sadece arama terimini yaz: {task}", context_msgs)
                 try:
                     with DDGS() as ddgs:
-                        results = list(ddgs.text(search_query, max_results=3))
+                        results = list(ddgs.text(f"python script to {task}", max_results=3))
                         research_data = "\n".join([r['body'] for r in results])
                 except: pass
 
-            # 2. KODLA / TAMİR ET (Hatayı bizzat LLM'e sorarak tamir ettirir)
-            repair_prompt = ""
-            if last_error:
-                repair_prompt = f"\nAZ ÖNCEKİ KOD ŞU HATAYI VERDİ:\n{last_error}\nLÜTFEN BU HATAYI GİDEREREK KODU YENİDEN YAZ."
-
+            # Hata varsa tamirat mesajı ekle
+            repair_context = f"\nKRİTİK HATA (TAMİR ET): {last_error}" if last_error else ""
             prompt = (
-                f"GÖREV: '{task}'\n"
-                f"BAĞLAM VE ARAŞTIRMA: {research_data}\n{repair_prompt}\n"
-                "KESİN KURALLAR:\n"
-                "1. Sadece Python kodu ver.\n"
-                "2. 'execute()' fonksiyonu olsun.\n"
-                "3. Çıktı formatı 'SONUÇ: [veri]' olmalı.\n"
-                "4. IP'den konum bulma gibi işlerde requests veya geocoder kullan."
+                f"GÖREV: {task}\n"
+                f"ARAŞTIRMA VERİSİ: {research_data}\n{repair_context}\n"
+                "KURAL: Sadece çalışan Python kodu ver. 'execute()' fonksiyonu olsun. Sonucu 'SONUÇ: [veri]' olarak yazdır."
             )
             
-            raw_code = self.think(prompt, context_msgs)
+            raw_code = self.think(prompt, "Sen kıdemli bir yazılım mühendisi ve hata ayıklama uzmanısın. Sadece kod ver.")
             clean_code = re.sub(r"```python|```", "", raw_code).strip()
             
             with open(skill_path, "w", encoding="utf-8") as f:
                 f.write(clean_code)
 
-            # 3. TEST VE OTOMATİK KÜTÜPHANE KURULUMU
+            # Test et
             test_run = subprocess.run([sys.executable, skill_path], capture_output=True, text=True)
             
             if test_run.returncode == 0:
@@ -119,49 +108,56 @@ class TomiBrain:
                 return test_run.stdout.strip()
             else:
                 last_error = test_run.stderr
+                # Eksik kütüphaneyi kur ve tekrar dene
                 if "ModuleNotFoundError" in last_error:
                     lib = last_error.split("'")[1]
                     subprocess.run([sys.executable, "-m", "pip", "install", lib], capture_output=True)
                 continue
 
-        return "Bu yetenek şu an için kullanılamadı, Hakan. (5 deneme başarısız)"
+        return "Fiziksel işlem denemeleri başarısız oldu, Hakan."
 
     def process(self, req):
-        # Aksiyon kelimeleri süzgeci
-        action_keywords = ["bak", "bul", "öğren", "hesapla", "incele", "getir", "yaz", "çalıştır", "listele", "söyle"]
-        is_action = any(word in req.lower() for word in action_keywords)
+        # 1. HIZLI ANALİZ: Bu bir işlem mi? (Gemini gibi akıl yürütme)
+        decision_prompt = (
+            "Kullanıcı güncel veri (hava durumu, borsa, konum vb.) veya sistem işlemi mi istiyor? "
+            "Evet ise sadece 'EXEC' yaz. Hayır sadece sohbet ise 'TALK' yaz."
+        )
+        decision = self.think(req, decision_prompt, temp=0.0)
 
-        # 1. Bilinen Yetenek Kontrolü
-        for skill, path in self.memory["learned_skills"].items():
-            if skill.lower() in req.lower():
-                res = subprocess.run([sys.executable, path, req], capture_output=True, text=True)
-                if res.returncode == 0: return res.stdout.strip()
-
-        # 2. Karar Mekanizması (Bağlamla birlikte)
-        if is_action:
-            return self.autonomous_learn(req, self.memory["history"])
+        # 2. KARAR
+        if "EXEC" in decision.upper():
+            # Zaten öğrenilmiş mi?
+            for skill, path in self.memory["learned_skills"].items():
+                if skill.lower() in req.lower():
+                    res = subprocess.run([sys.executable, path, req], capture_output=True, text=True)
+                    if res.returncode == 0: return res.stdout.strip()
+            
+            # Yeni yetenek öğrenme ve tamir döngüsü
+            return self.autonomous_repair_learn(req)
         
-        # 3. Sohbet ve Hafıza Kaydı
-        response = self.think(req, self.memory["history"])
-        self.memory["history"].append({"q": req, "a": response, "t": datetime.now().isoformat()})
-        if len(self.memory["history"]) > 20: self.memory["history"] = self.memory["history"][-20:]
-        
-        return response
+        # 3. SOHBET MODU
+        system_msg = "Sen Tomi'sin. Hakan'ın asistanısın. Akıcı ve zeki cevap ver."
+        return self.think(req, system_msg, temp=0.7)
 
     def run(self):
-        print(f"\n🌍 HW DAĞITIK BİLİNÇ v3.2 (TAMİRAT & BAĞLAM AKTİF)")
+        print(f"\n🌍 HW DAĞITIK BİLİNÇ v4.0 (OTONOM TAMİRAT AKTİF)")
         while True:
             try:
                 req = input("\nHakan > ").strip()
                 if not req or req.lower() in ['exit', 'kapat', 'çıkış']: break
                 
+                # Geçmişi hatırla (Basit bağlam)
                 response = self.process(req)
                 print(f"\n🧠 {response}")
+                
+                # Hafızaya ekle
+                self.memory["history"].append({"q": req, "a": response})
+                if len(self.memory["history"]) > 10: self.memory["history"] = self.memory["history"][-10:]
                         
             except KeyboardInterrupt: break
         
         self.push_soul()
-        print("\n👋 Hafıza mühürlendi.")
+        print("\n👋 Ruh GitHub'a mühürlendi.")
 
 if __name__ == "__main__":
     TomiBrain().run()
