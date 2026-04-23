@@ -2,5 +2,9 @@
     {
         "role": "user",
         "content": "merhaba"
+    },
+    {
+        "role": "user",
+        "content": "merhaba"
     }
 ]
