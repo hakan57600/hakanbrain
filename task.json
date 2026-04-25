@@ -1,1 +1,8 @@
-[{"id": 999, "cmd": "uptime", "status": "running", "requested_by_device": "v7.7-TESTER"}]
+[
+    {
+        "id": 999,
+        "cmd": "uptime",
+        "status": "running",
+        "requested_by_device": "v7.7-TESTER"
+    }
+]
