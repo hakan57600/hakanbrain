@@ -1,10 +1,39 @@
 [
     {
         "role": "user",
+        "content": "Sistem testi başlatıldı.",
+        "time": "2026-04-22T22:40:00"
+    },
+    {
+        "role": "user",
+        "content": "merhaba"
+    },
+    {
+        "role": "jarvis",
+        "content": "Merhaba! Size nasıl Yardımcı olabilirim?"
+    },
+    {
+        "role": "user",
+        "content": "yarın hava nasıl olacak"
+    },
+    {
+        "role": "user",
+        "content": "oradamısın"
+    },
+    {
+        "role": "user",
         "content": "merhaba"
     },
     {
         "role": "user",
         "content": "merhaba"
+    },
+    {
+        "role": "user",
+        "content": "ordamısı"
+    },
+    {
+        "role": "jarvis",
+        "content": "Merhaba! Ben bir sohbet botuyum, fiziksel bir konumda değilim. Sizinle sohbet etmek için her zaman hazırım! Yarınki hava durumunu öğrenmek için bir yerin adı gerekiyor, hangı yerin hava durumunu merak ediyorsunuz?"
     }
 ]
