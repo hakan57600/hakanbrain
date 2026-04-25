@@ -1,15 +1,1 @@
-[
-    {
-        "id": 888,
-        "output": "",
-        "status": "success",
-        "time": "2026-04-22 23:57:06.018388"
-    },
-    {
-        "id": 999,
-        "output": "22:50:36 up  9:52,  1 user,  load average: 0,61, 0,71, 0,66",
-        "status": "success",
-        "time": "2026-04-23 22:50:37.010780",
-        "requested_by_device": "v7.7-TESTER"
-    }
-]
+[{"id": 888, "output": "", "status": "success", "time": "2026-04-22 23:57:06.018388"}, {"id": 999, "output": "22:50:36 up  9:52,  1 user,  load average: 0,61, 0,71, 0,66", "status": "success", "time": "2026-04-23 22:50:37.010780", "requested_by_device": "v7.7-TESTER"}, {"id": 1777156565114, "output": "Command not allowed: merhaba", "status": "failed", "time": "2026-04-26 01:36:09.448130"}]
