@@ -1,8 +1,1 @@
-[
-    {
-        "id": 1777157320092,
-        "cmd": "işletim sistemi ne",
-        "status": "pending",
-        "type": "chat"
-    }
-]
+[{"id": 1777157320092, "cmd": "i\u015fletim sistemi ne", "status": "running", "type": "chat"}]
