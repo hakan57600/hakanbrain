@@ -1,1 +1,8 @@
-[{"id": 9999, "cmd": "Sistem bilgilerini s\u00f6yle", "status": "running", "type": "chat"}]
+[
+    {
+        "id": 9999,
+        "cmd": "Sistem bilgilerini s\u00f6yle",
+        "status": "completed",
+        "type": "chat"
+    }
+]
