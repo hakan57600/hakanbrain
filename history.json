@@ -1,7 +1,7 @@
 [
     {
         "role": "user",
-        "content": "Sistem testi başlatıldı.",
+        "content": "Sistem testi ba\u015flat\u0131ld\u0131.",
         "time": "2026-04-22T22:40:00"
     },
     {
@@ -10,19 +10,15 @@
     },
     {
         "role": "jarvis",
-        "content": "Merhaba! Size nasıl Yardımcı olabilirim?"
+        "content": "Merhaba! Size nas\u0131l Yard\u0131mc\u0131 olabilirim?"
     },
     {
         "role": "user",
-        "content": "yarın hava nasıl olacak"
+        "content": "yar\u0131n hava nas\u0131l olacak"
     },
     {
         "role": "user",
-        "content": "oradamısın"
-    },
-    {
-        "role": "user",
-        "content": "merhaba"
+        "content": "oradam\u0131s\u0131n"
     },
     {
         "role": "user",
@@ -30,10 +26,20 @@
     },
     {
         "role": "user",
-        "content": "ordamısı"
+        "content": "merhaba"
+    },
+    {
+        "role": "user",
+        "content": "ordam\u0131s\u0131"
     },
     {
         "role": "jarvis",
-        "content": "Merhaba! Ben bir sohbet botuyum, fiziksel bir konumda değilim. Sizinle sohbet etmek için her zaman hazırım! Yarınki hava durumunu öğrenmek için bir yerin adı gerekiyor, hangı yerin hava durumunu merak ediyorsunuz?"
+        "content": "Merhaba! Ben bir sohbet botuyum, fiziksel bir konumda de\u011filim. Sizinle sohbet etmek i\u00e7in her zaman haz\u0131r\u0131m! Yar\u0131nki hava durumunu \u00f6\u011frenmek i\u00e7in bir yerin ad\u0131 gerekiyor, hang\u0131 yerin hava durumunu merak ediyorsunuz?"
+    },
+    {
+        "id": 1777157971266,
+        "user": "hangi i\u015fletim sistemi bu",
+        "ai": "Hakan Bey, bu bir Linux tabanl\u0131 i\u015fletim sistemidir. Ancak tam olarak hangi da\u011f\u0131t\u0131mda oldu\u011fumuzu belirlemek i\u00e7in daha fazla bilgiye ihtiyac\u0131m\u0131z var. [KOMUT: 'cat /etc/os-release'] Bu komutu \u00e7al\u0131\u015ft\u0131rd\u0131\u011f\u0131m\u0131zda i\u015fletim sisteminin da\u011f\u0131t\u0131m\u0131n\u0131 ve s\u00fcr\u00fcm\u00fcn\u00fc \u00f6\u011frenebiliriz.",
+        "time": "2026-04-26 01:59:35.308472"
     }
 ]
