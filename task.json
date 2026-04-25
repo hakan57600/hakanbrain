@@ -1,1 +1,8 @@
-[{"id": 1777156907846, "cmd": "merhaba", "status": "running", "type": "chat"}]
+[
+    {
+        "id": 1777156944541,
+        "cmd": "şuan hangi cihazımdasın",
+        "status": "pending",
+        "type": "chat"
+    }
+]
