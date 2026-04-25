@@ -1,1 +1,8 @@
-[{"id": 1777157468731, "cmd": "bu cihaz\u0131n i\u015fletim sistemi ne", "status": "running", "type": "chat"}]
+[
+    {
+        "id": 1777157971266,
+        "cmd": "hangi işletim sistemi bu",
+        "status": "pending",
+        "type": "chat"
+    }
+]
