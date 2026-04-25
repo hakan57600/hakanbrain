@@ -1,0 +1,13 @@
+[
+    {
+        "username": "hakan",
+        "password_hash": "lg4TGsyH/bocuIWx9pAg01C8wdNCnesFWSsEA5VkqZw=",
+        "password_hash_algo": "pbkdf2_sha256",
+        "password_salt": "X9SmY3UpZ02HltEnm5AIlA==",
+        "password_iterations": 100000,
+        "role": "admin",
+        "authorized": true,
+        "created_at": "2026-04-22",
+        "devices": []
+    }
+]
