@@ -1,1 +1,8 @@
-[{"id": 1777156725339, "cmd": "merhaba", "status": "failed", "type": "chat", "finished_at": "2026-04-26 01:38:48.605670"}]
+[
+    {
+        "id": 1777156907846,
+        "cmd": "merhaba",
+        "status": "pending",
+        "type": "chat"
+    }
+]
